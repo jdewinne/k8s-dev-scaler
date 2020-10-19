@@ -7,4 +7,7 @@ So in order to reduce your resource consumption by your k8s dev cluster, this sc
 # Usage
 
 Scale down/up all resources in a k8s namespace
+
+```
 ./scale.sh -c [CONTEXT] -n [NAMESPACE] -s [down|up]
+```
