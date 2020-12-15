@@ -25,7 +25,7 @@ jobs:
         echo "${{ secrets.BUILDBUDDY_ORG_KEY }}">buildbuddy-key.pem
     - name: Build
       run: |
-        "${GITHUB_WORKSPACE}/bin/bazel" build --config=ci //:k8s-dev-scaler
+        "${GITHUB_WORKSPACE}/bin/bazel" build --config=ci //...
     - name: Test
       run: |
-        "${GITHUB_WORKSPACE}/bin/bazel" test --config=ci //:k8s-dev-scaler
+        "${GITHUB_WORKSPACE}/bin/bazel" test --config=ci //...
