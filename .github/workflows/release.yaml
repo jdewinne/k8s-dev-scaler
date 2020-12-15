@@ -1,0 +1,67 @@
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: Release k8s-dev-scaler
+
+jobs:
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Install bazelisk
+        run: |
+          curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.1.0/bazelisk-linux-amd64"
+          mkdir -p "${GITHUB_WORKSPACE}/bin/"
+          mv bazelisk-linux-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
+          chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
+      - name: Create certs
+        run: |
+          echo "${{ secrets.BUILDBUDDY_ORG_CERT }}">buildbuddy-cert.pem
+          echo "${{ secrets.BUILDBUDDY_ORG_KEY }}">buildbuddy-key.pem
+      - name: Build Linux
+        run: |
+          "${GITHUB_WORKSPACE}/bin/bazel" build --config=ci --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //...
+      - name: Test Linux
+        run: |
+          "${GITHUB_WORKSPACE}/bin/bazel" test --config=ci --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //...
+      - name: Upload linux Asset
+          id: upload-linux-asset 
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            upload_url: ${{ create_release.steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+            asset_path: ./bazel-bin/k8s-dev-scaler_/k8s-dev-scaler
+            asset_name: k8s-dev-scaler
+            asset_content_type: application/octet-stream
+      - name: Build darwin
+        run: |
+          "${GITHUB_WORKSPACE}/bin/bazel" build --config=ci --platforms=@io_bazel_rules_go//go/toolchain:darwin_amd64 //...
+      - name: Test darwin
+        run: |
+          "${GITHUB_WORKSPACE}/bin/bazel" test --config=ci --platforms=@io_bazel_rules_go//go/toolchain:darwin_amd64 //...
+      - name: Upload darwin Asset
+          id: upload-darwin-asset 
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            upload_url: ${{ create_release.steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+            asset_path: ./bazel-bin/k8s-dev-scaler_/k8s-dev-scaler
+            asset_name: k8s-dev-scaler.mac
+            asset_content_type: application/octet-stream
