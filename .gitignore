@@ -2,3 +2,5 @@ bazel-bin
 bazel-k8s-dev-scaler
 bazel-out
 bazel-testlogs
+buildbuddy-cert.pem
+buildbuddy-key.pem
