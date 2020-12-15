@@ -1,0 +1,4 @@
+bazel-bin
+bazel-k8s-dev-scaler
+bazel-out
+bazel-testlogs
