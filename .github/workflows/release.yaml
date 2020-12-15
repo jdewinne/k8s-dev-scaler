@@ -40,15 +40,15 @@ jobs:
         run: |
           "${GITHUB_WORKSPACE}/bin/bazel" test --config=ci --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //...
       - name: Upload linux Asset
-          id: upload-linux-asset 
-          uses: actions/upload-release-asset@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ create_release.steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-            asset_path: ./bazel-bin/k8s-dev-scaler_/k8s-dev-scaler
-            asset_name: k8s-dev-scaler
-            asset_content_type: application/octet-stream
+        id: upload-linux-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ create_release.steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./bazel-bin/k8s-dev-scaler_/k8s-dev-scaler
+          asset_name: k8s-dev-scaler
+          asset_content_type: application/octet-stream
       - name: Build darwin
         run: |
           "${GITHUB_WORKSPACE}/bin/bazel" build --config=ci --platforms=@io_bazel_rules_go//go/toolchain:darwin_amd64 //...
@@ -56,12 +56,12 @@ jobs:
         run: |
           "${GITHUB_WORKSPACE}/bin/bazel" test --config=ci --platforms=@io_bazel_rules_go//go/toolchain:darwin_amd64 //...
       - name: Upload darwin Asset
-          id: upload-darwin-asset 
-          uses: actions/upload-release-asset@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ create_release.steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-            asset_path: ./bazel-bin/k8s-dev-scaler_/k8s-dev-scaler
-            asset_name: k8s-dev-scaler.mac
-            asset_content_type: application/octet-stream
+        id: upload-darwin-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ create_release.steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./bazel-bin/k8s-dev-scaler_/k8s-dev-scaler
+          asset_name: k8s-dev-scaler.mac
+          asset_content_type: application/octet-stream
