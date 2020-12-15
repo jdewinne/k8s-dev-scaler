@@ -67,6 +67,11 @@ func main() {
 		panic("Scale must be up or down")
 	}
 
+	replicas := int32(0)
+	if *scale == "up" {
+		replicas = 1
+	}
+
 	// use the current context in kubeconfig
 	_, client, err := GetKubeClient(*k8scontextflag)
 	if err != nil {
@@ -81,7 +86,13 @@ func main() {
 		panic(err)
 	}
 	for _, d := range list.Items {
-		fmt.Printf(" * %s (%d replicas)\n", d.Name, *d.Spec.Replicas)
+		fmt.Printf(" * Scaling %s (%d to %d replicas)\n", d.Name, *d.Spec.Replicas, replicas)
+		opts, err := deploymentsClient.GetScale(context.TODO(), d.Name, metav1.GetOptions{})
+		if err != nil {
+			panic(err)
+		}
+		opts.Spec.Replicas = replicas
+		deploymentsClient.UpdateScale(context.TODO(), d.Name, opts, metav1.UpdateOptions{})
 	}
 
 	fmt.Println("Stateful sets")
@@ -91,7 +102,13 @@ func main() {
 		panic(err)
 	}
 	for _, ss := range sslist.Items {
-		fmt.Printf(" * %s (%d replicas)\n", ss.Name, *ss.Spec.Replicas)
+		fmt.Printf(" * Scaling %s (%d to %d replicas)\n", ss.Name, *ss.Spec.Replicas, replicas)
+		opts, err := statefulSetsClient.GetScale(context.TODO(), ss.Name, metav1.GetOptions{})
+		if err != nil {
+			panic(err)
+		}
+		opts.Spec.Replicas = replicas
+		statefulSetsClient.UpdateScale(context.TODO(), ss.Name, opts, metav1.UpdateOptions{})
 	}
 
 }
