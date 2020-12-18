@@ -1,3 +1,5 @@
+![CI](https://github.com/jdewinne/k8s-dev-scaler/workflows/CI/badge.svg)
+![Release k8s-dev-scaler](https://github.com/jdewinne/k8s-dev-scaler/workflows/Release%20k8s-dev-scaler/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # About
