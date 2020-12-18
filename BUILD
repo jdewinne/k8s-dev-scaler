@@ -10,7 +10,7 @@ go_library(
     importpath = "github.com/jdewinne/k8s-dev-scaler",
     visibility = ["//visibility:private"],
     deps = [
-        "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
+        "//scaler",
         "@io_k8s_client_go//kubernetes",
         "@io_k8s_client_go//rest",
         "@io_k8s_client_go//tools/clientcmd",

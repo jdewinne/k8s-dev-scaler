@@ -2,7 +2,12 @@
 
 When developing on a local k8s instance, often you have to juggle with memory, cpu, ... And when developing with multiple branches, you sometimes have your app installed in multiple namespaces. Each branch, having it's own namespace maybe...
 
-So in order to reduce your resource consumption by your k8s dev cluster, this tool allows to downscale all `deployments` and `statefulsets` to zero. It also allows to put them all back at scale `1`.
+So in order to reduce your resource consumption by your k8s dev cluster, this tool allows to downscale all `deployments` and `statefulsets` to zero. It also allows to scale them all back up. Behind the scenes it places an annotaion called `k8s.dev.scaler/desired.replicas` that keeps track of the desired number if replicas.
+
+# Installation
+
++ Linux: Download from [Releases](https://github.com/jdewinne/k8s-dev-scaler/releases)
++ Linux, Mac: Install using `go get https://github.com/jdewinne/k8s-dev-scaler`
 
 # Usage
 

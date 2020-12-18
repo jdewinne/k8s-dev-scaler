@@ -1,14 +1,14 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	scaler "github.com/jdewinne/k8s-dev-scaler/scaler"
 )
 
 // GetKubeClient creates a Kubernetes config and client for a given kubeconfig context.
@@ -67,11 +67,6 @@ func main() {
 		panic("Scale must be up or down")
 	}
 
-	replicas := int32(0)
-	if *scale == "up" {
-		replicas = 1
-	}
-
 	// use the current context in kubeconfig
 	_, client, err := GetKubeClient(*k8scontextflag)
 	if err != nil {
@@ -79,36 +74,11 @@ func main() {
 	}
 
 	fmt.Println("Deployments")
-
-	deploymentsClient := client.AppsV1().Deployments(*namespace)
-	list, err := deploymentsClient.List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		panic(err)
-	}
-	for _, d := range list.Items {
-		fmt.Printf(" * Scaling %s (%d to %d replicas)\n", d.Name, *d.Spec.Replicas, replicas)
-		opts, err := deploymentsClient.GetScale(context.TODO(), d.Name, metav1.GetOptions{})
-		if err != nil {
-			panic(err)
-		}
-		opts.Spec.Replicas = replicas
-		deploymentsClient.UpdateScale(context.TODO(), d.Name, opts, metav1.UpdateOptions{})
-	}
+	dscaler := scaler.NewDeploymentsScaler(client, *namespace, *scale)
+	dscaler.ScaleDeploymentResources()
 
 	fmt.Println("Stateful sets")
-	statefulSetsClient := client.AppsV1().StatefulSets(*namespace)
-	sslist, err := statefulSetsClient.List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		panic(err)
-	}
-	for _, ss := range sslist.Items {
-		fmt.Printf(" * Scaling %s (%d to %d replicas)\n", ss.Name, *ss.Spec.Replicas, replicas)
-		opts, err := statefulSetsClient.GetScale(context.TODO(), ss.Name, metav1.GetOptions{})
-		if err != nil {
-			panic(err)
-		}
-		opts.Spec.Replicas = replicas
-		statefulSetsClient.UpdateScale(context.TODO(), ss.Name, opts, metav1.UpdateOptions{})
-	}
+	sscaler := scaler.NewStatefulSetsScaler(client, *namespace, *scale)
+	sscaler.ScaleStatefulSetResources()
 
 }
