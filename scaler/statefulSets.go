@@ -46,6 +46,36 @@ func (ss *StatefulSetsScaler) getDesiredReplicas(name string) (int32, error) {
 	return int32(replicas), nil
 }
 
+func (ss *StatefulSetsScaler) getReplicaScale(name string, replicas int32) int32 {
+	// store original desired number of replicas as an annotation
+	if ss.scale == "down" {
+		err := ss.annotateResource(name, replicas)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+	// If scaling up, get the replicas from the previously stored annotation
+	nreps := int32(0)
+	if ss.scale == "up" {
+		nreps, err := ss.getDesiredReplicas(name)
+		if err != nil {
+			panic(err.Error())
+		}
+		return nreps
+	}
+	return nreps
+}
+
+func (ss *StatefulSetsScaler) runScaler(name string, replicas int32) {
+	opts, err := ss.client.GetScale(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf(" * Scaling %s (%d to %d replicas)\n", name, opts.Spec.Replicas, replicas)
+	opts.Spec.Replicas = replicas
+	ss.client.UpdateScale(context.TODO(), name, opts, metav1.UpdateOptions{})
+}
+
 // ScaleStatefulSetResources will scale all deployments up or down in a namespace
 func (ss *StatefulSetsScaler) ScaleStatefulSetResources() {
 	resources, err := ss.client.List(context.TODO(), metav1.ListOptions{})
@@ -53,27 +83,9 @@ func (ss *StatefulSetsScaler) ScaleStatefulSetResources() {
 		panic(err)
 	}
 	for _, r := range resources.Items {
-		// store original desired number of replicas as an annotation
-		if ss.scale == "down" {
-			err = ss.annotateResource(r.Name, *r.Spec.Replicas)
-			if err != nil {
-				panic(err.Error())
-			}
-		}
-		// If scaling up, get the replicas from the previously stored annotation
-		replicas := int32(0)
-		if ss.scale == "up" {
-			replicas, err = ss.getDesiredReplicas(r.Name)
-			if err != nil {
-				panic(err.Error())
-			}
-		}
-		fmt.Printf(" * Scaling %s (%d to %d replicas)\n", r.Name, *r.Spec.Replicas, replicas)
-		opts, err := ss.client.GetScale(context.TODO(), r.Name, metav1.GetOptions{})
-		if err != nil {
-			panic(err)
-		}
-		opts.Spec.Replicas = replicas
-		ss.client.UpdateScale(context.TODO(), r.Name, opts, metav1.UpdateOptions{})
+		// If scaling up, get the replicas from the previously stored annotation, else this returns zero
+		replicas := ss.getReplicaScale(r.Name, *r.Spec.Replicas)
+
+		ss.runScaler(r.Name, replicas)
 	}
 }

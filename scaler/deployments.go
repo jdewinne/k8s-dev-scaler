@@ -44,6 +44,36 @@ func (ds *DeploymentsScaler) getDesiredReplicas(name string) (int32, error) {
 	return int32(replicas), nil
 }
 
+func (ds *DeploymentsScaler) getReplicaScale(name string, replicas int32) int32 {
+	// store original desired number of replicas as an annotation
+	if ds.scale == "down" {
+		err := ds.annotateResource(name, replicas)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+	// If scaling up, get the replicas from the previously stored annotation
+	nreps := int32(0)
+	if ds.scale == "up" {
+		nreps, err := ds.getDesiredReplicas(name)
+		if err != nil {
+			panic(err.Error())
+		}
+		return nreps
+	}
+	return nreps
+}
+
+func (ds *DeploymentsScaler) runScaler(name string, replicas int32) {
+	opts, err := ds.client.GetScale(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf(" * Scaling %s (%d to %d replicas)\n", name, opts.Spec.Replicas, replicas)
+	opts.Spec.Replicas = replicas
+	ds.client.UpdateScale(context.TODO(), name, opts, metav1.UpdateOptions{})
+}
+
 // ScaleDeploymentResources will scale all deployments up or down in a namespace
 func (ds *DeploymentsScaler) ScaleDeploymentResources() {
 	resources, err := ds.client.List(context.TODO(), metav1.ListOptions{})
@@ -51,27 +81,9 @@ func (ds *DeploymentsScaler) ScaleDeploymentResources() {
 		panic(err)
 	}
 	for _, r := range resources.Items {
-		// store original desired number of replicas as an annotation
-		if ds.scale == "down" {
-			err = ds.annotateResource(r.Name, *r.Spec.Replicas)
-			if err != nil {
-				panic(err.Error())
-			}
-		}
-		// If scaling up, get the replicas from the previously stored annotation
-		replicas := int32(0)
-		if ds.scale == "up" {
-			replicas, err = ds.getDesiredReplicas(r.Name)
-			if err != nil {
-				panic(err.Error())
-			}
-		}
-		fmt.Printf(" * Scaling %s (%d to %d replicas)\n", r.Name, *r.Spec.Replicas, replicas)
-		opts, err := ds.client.GetScale(context.TODO(), r.Name, metav1.GetOptions{})
-		if err != nil {
-			panic(err)
-		}
-		opts.Spec.Replicas = replicas
-		ds.client.UpdateScale(context.TODO(), r.Name, opts, metav1.UpdateOptions{})
+		// If scaling up, get the replicas from the previously stored annotation, else this returns zero
+		replicas := ds.getReplicaScale(r.Name, *r.Spec.Replicas)
+
+		ds.runScaler(r.Name, replicas)
 	}
 }

@@ -8,7 +8,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	scaler "github.com/jdewinne/k8s-dev-scaler/scaler"
+	"github.com/jdewinne/k8s-dev-scaler/scaler"
 )
 
 // GetKubeClient creates a Kubernetes config and client for a given kubeconfig context.
