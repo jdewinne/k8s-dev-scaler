@@ -18,11 +18,17 @@ go_library(
 
 go_test(
     name = "scaler_test",
-    srcs = ["deployments_test.go"],
+    srcs = [
+        "deployments_test.go",
+        "statefulSets_test.go",
+    ],
     embed = [":scaler"],
     deps = [
         "@com_github_stretchr_testify//assert",
+        "@io_k8s_api//apps/v1:apps",
+        "@io_k8s_api//autoscaling/v1:autoscaling",
         "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
+        "@io_k8s_apimachinery//pkg/runtime",
         "@io_k8s_client_go//kubernetes/fake",
     ],
 )
